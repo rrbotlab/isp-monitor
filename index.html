@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ISP Monitor</title>
+    <meta
+      name="viewport"
+      content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0"
+    />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    
+    <link
+      rel="stylesheet"
+      href="//cdnjs.cloudflare.com/ajax/libs/milligram/1.3.0/milligram.css"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+
+    <script type="text/javascript">
+      let ws;
+      let wsUri = 'ws:';
+      let loc = window.location;
+      console.log(loc);
+      if (loc.protocol === 'https:') {
+        wsUri = 'wss:';
+      }
+      wsUri += 'cubo-lab.mybluemix.net/ws/pico-ping';
+      let cnt = 0;
+      let startTs = new Date();
+      setInterval(function () {
+        document.getElementById('timer').innerHTML =
+          'aguardando ping: ' + cnt + ' segundos';
+        cnt++;
+      }, 1000);
+
+      document.addEventListener('DOMContentLoaded', () => {
+        //onload="wsConnect();"
+        wsConnect();
+      });
+
+      function wsConnect() {
+        console.log('connect', wsUri);
+        ws = new WebSocket(wsUri);
+
+        //let line = "";    // either uncomment this for a building list of messages
+        ws.onmessage = function (msg) {
+          let line = ''; // or uncomment this to overwrite the existing message
+          // parse the incoming message as a JSON object
+
+          // let sp1 = (new Date(parseInt(msg.data))).toLocaleString([], {timeZone: 'America/Sao_Paulo'});
+          // let sp2 = (new Date(parseInt(msg.data))).toLocaleString([], {timeZone: 'UTC'});
+
+          // console.log(msg);
+
+          data = JSON.parse(msg.data);
+
+          if (data.value == 100) {
+            value = '🟢 Internet Online';
+          } else if (data.value == -100) {
+            value = '🔴 Internet Offline';
+          } else if (data.value == 0) {
+            value = '🔵 Reinicializando';
+          } else {
+            value = '🟡 Estado inválido';
+          }
+
+          cnt = 0;
+
+          // replace the messages div with the new "line"
+          document.getElementById('messages').innerHTML = value;
+          //ws.send(JSON.stringify({data:data}));
+
+          if(document.getElementById('live-content').childElementCount == 5)
+            document.getElementById('live-content').removeChild(document.getElementById('live-content').children[4])
+
+          //let objTo = document.getElementById('live-content')
+          let divtest = document.createElement("div");
+          divtest.classList.add("data-row")
+          divtest.innerHTML = '<span class="timestamp">' + data.lastSeenTime + '</span><span class="data">' + value.split(" ")[0] + '</span>';
+          document.getElementById('live-content').prepend(divtest) // appendChild(divtest)
+
+          
+          
+          nowTs = new Date();
+        };
+        ws.onopen = function () {
+          // update the status div with the connection status
+          document.getElementById('status').innerHTML = '🔵 Servidor Conectado';
+          //ws.send("Open for data");
+          console.log('connected');
+        };
+        ws.onclose = function () {
+          // update the status div with the connection status
+          document.getElementById('status').innerHTML =
+            '🔴 Servidor Desconectado';
+          // in case of lost connection tries to reconnect every 3 secs
+          setTimeout(wsConnect, 3000);
+        };
+      }
+
+      function doit(m) {
+        if (ws) {
+          ws.send(m);
+        }
+      }
+    </script>
+  </head>
+  <body onunload="ws.disconnect();">
+    <div class="container">
+      <h1>ISP Monitor</h1>
+      <div class="logo"></div>
+      <section class="status">
+        <header>Status</header>
+        <div id="status" class="c">🔴 Servidor Desconectado</div>
+        <div id="messages" class="c">🟡 Conectando Monitor...</div>
+        <div id="timer" class="c"></div>
+      </section>
+      <section class="live">
+        <header>Tempo Real</header>
+        <div class="live-content" id="live-content">
+          <!-- <div class="data-row"></div> -->
+        </div>
+      </section>
+      <section class="graph">
+        <header>Métricas</header>
+        <img
+          src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSIxey6krnl99PojVXz7dhkyoma8cGCCo6SgEUKODiGwn3exiJQPylRKZ5wKnpzS9nm0TxOfhiryJG1/pubchart?oid=888744699&format=image"
+        /><img
+          src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSIxey6krnl99PojVXz7dhkyoma8cGCCo6SgEUKODiGwn3exiJQPylRKZ5wKnpzS9nm0TxOfhiryJG1/pubchart?oid=24811961&format=image"
+        /><img
+        src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSIxey6krnl99PojVXz7dhkyoma8cGCCo6SgEUKODiGwn3exiJQPylRKZ5wKnpzS9nm0TxOfhiryJG1/pubchart?oid=815733979&format=image"
+        /><img
+        src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSIxey6krnl99PojVXz7dhkyoma8cGCCo6SgEUKODiGwn3exiJQPylRKZ5wKnpzS9nm0TxOfhiryJG1/pubchart?oid=618762381&format=image"
+        />
+      </section>
+      <section>
+        <header>Telegram Bot</header>
+        <h4 class="c">
+          <a href="tg://resolve?domain=ISPMonBot" target="_blank"
+            >@ISPMonBot</a
+          >
+        </h4>
+      </section>
+      <section class="about">
+        <header>Sobre</header>
+        <p>
+          Este site monitora o serviço de internet (Claro) instalado em SP.
+        </p>
+      </section>
+      <section class="footer c">
+        <p><span class="made">Made with <span style="color:red">&hearts;</span> by <a href="https://github.com/rrbotlab" target="_blank">rrbotlab</a> in SP/BR</span></p>
+      </section>
+    </div>
+
+    <!--<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>-->
+  </body>
+</html>
