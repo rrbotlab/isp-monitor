@@ -25,7 +25,8 @@
       if (loc.protocol === 'https:') {
         wsUri = 'wss:';
       }
-      wsUri += 'cubo-lab.mybluemix.net/ws/pico-ping';
+      //wsUri += 'cubo-lab.mybluemix.net/ws/pico-ping';
+      wsUri = 'ws:vm2.arbly.com:1880/ws/pico-ping';
       let cnt = 0;
       let startTs = new Date();
       setInterval(function () {
@@ -77,10 +78,9 @@
           //let objTo = document.getElementById('live-content')
           let divtest = document.createElement("div");
           divtest.classList.add("data-row")
-          divtest.innerHTML = '<span class="timestamp">' + data.lastSeenTime + '</span><span class="data">' + value.split(" ")[0] + '</span>';
+          //divtest.innerHTML = '<span class="timestamp">' + data.lastSeenTime + '</span><span class="data">' + value.split(" ")[0] + '</span>';
+          divtest.innerHTML = '<span class="timestamp">' + data.lastSeenTime + '</span>';
           document.getElementById('live-content').prepend(divtest) // appendChild(divtest)
-
-          
           
           nowTs = new Date();
         };
